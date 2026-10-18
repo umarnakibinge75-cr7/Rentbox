@@ -9,12 +9,11 @@ body{background:#f8fafc;margin:0;padding:0}
 .header{padding:20px 16px 10px 16px}
 .header h1{margin:0;font-size:22px}
 .header p{color:#64748b;margin:4px 0}
-.btn{width:100%;background:#000;color:#fff;padding:16px;border-radius:14px;border:0;font-weight:700;font-size:16px;margin:12px 0}
+.btn{width:100%;background:#000;color:#fff;padding:16px;border-radius:14px;border:0;font-weight:700;font-size:16px;margin:12px 0;cursor:pointer;display:block}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px}
 .stat{background:white;border-radius:16px;padding:14px;box-shadow:0 1px 3px #0001}
 .stat small{color:#64748b}
-.stat b{font-size:20px;display:block;margin:6px 0}
-.stat span{font-size:12px}
+.stat b{font-size:18px;display:block;margin:6px 0}
 .green{color:#16a34a}
 .red{color:#dc2626}
 .properties{padding:16px}
@@ -25,81 +24,164 @@ body{background:#f8fafc;margin:0;padding:0}
 .filter.active{background:#000;color:#fff}
 .card{background:white;border-radius:16px;padding:14px;box-shadow:0 2px 8px #0001;margin-bottom:12px}
 .card-top{display:flex;justify-content:space-between}
-.card-top b{font-size:16px}
 .unpaid-badge{background:#fee2e2;color:#dc2626;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700}
 .paid-badge{background:#dcfce7;color:#16a34a;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700}
 .card small{color:#64748b}
 .card .row{display:flex;gap:8px;margin-top:10px}
 .card input{width:100%;padding:10px;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc}
-.btn-paid{background:#000;color:#fff;flex:1;padding:12px;border-radius:10px;border:0;font-weight:700}
-.btn-wa{background:#25D366;color:#fff;flex:1;padding:12px;border-radius:10px;border:0;font-weight:700}
+.btn-paid{background:#000;color:#fff;flex:1;padding:12px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
+.btn-wa{background:#25D366;color:#fff;flex:1;padding:12px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
 .footer-stats{padding:16px;display:grid;gap:10px}
 .footer-card{background:white;padding:14px;border-radius:16px;box-shadow:0 1px 3px #0001}
-#form{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0008;z-index:10;padding:20px;align-items:center;justify-content:center}
+#form{position:fixed;top:0;left:0;right:0;bottom:0;background:#0008;z-index:100;display:none;padding:20px;align-items:center;justify-content:center}
+#form.show{display:flex}
 #formInner{background:white;padding:20px;border-radius:16px;width:100%;max-width:400px}
 #formInner input{width:100%;padding:12px;margin:6px 0;border-radius:10px;border:1px solid #ddd}
+#paywall{position:fixed;top:0;left:0;right:0;bottom:0;background:#f8fafc;z-index:200;display:none;padding:20px;overflow:auto}
+#paywall.show{display:block}
+.pay-card{background:white;padding:20px;border-radius:16px;box-shadow:0 4px 20px #0002;margin:20px 0;text-align:center}
+.momo{border:2px dashed #000;padding:12px;border-radius:12px;margin:10px 0;background:#fffbe6}
+.admin-link{font-size:12px;color:#64748b;text-align:center;margin-top:10px;cursor:pointer}
 </style>
 </head>
 <body>
 <div class="header">
 <h1>RentboxUganda</h1>
-<p>Landlord Rent Tracker · October 2026</p>
-<button class="btn" onclick="openForm()">+ Add Tenant</button>
+<p>Landlord Rent Tracker · <span id="dateNow"></span></p>
+<button type="button" class="btn" id="addBtn">+ Add Tenant</button>
+<div id="trialInfo" style="font-size:12px;color:#64748b;text-align:center"></div>
 </div>
+
 <div class="stats">
-<div class="stat"><small>Collected This Month <span class="green">● <span id="paidCount">0</span> paid</span></small><b id="collectedTop">UGX 0</b><span id="collectedPct">0%</span></div>
-<div class="stat"><small>Total Pending <span class="red">● <span id="unpaidCount">0</span> unpaid</span></small><b id="pendingTop">UGX 0</b><span>Outstanding rent</span></div>
-<div class="stat"><small>Total Tenants Occupancy</small><b id="totalTop">0 Tenants</b><span>Expected: <span id="expectedTop">UGX 0</span></span></div>
-<div class="stat"><small>My Properties</small><b>Offline Ready</b><span>Local storage</span></div>
+<div class="stat"><small>Collected <span class="green">● <span id="paidCount">0</span> paid</span></small><b id="collectedTop">UGX 0</b><span id="collectedPct">0%</span></div>
+<div class="stat"><small>Pending <span class="red">● <span id="unpaidCount">0</span> unpaid</span></small><b id="pendingTop">UGX 0</b><span>Outstanding</span></div>
+<div class="stat"><small>Total Tenants</small><b id="totalTop">0 Tenants</b><span>Expected: <span id="expectedTop">UGX 0</span></span></div>
+<div class="stat"><small>Subscription</small><b>UGX 30k/mo</b><span id="subStatus">Active</span></div>
 </div>
+
 <div class="properties">
 <div class="prop-header"><b>My Properties</b><span class="badge">Offline Ready</span></div>
 <div class="filters">
-<button class="filter active" onclick="filterBy('all',this)">All <span id="fAll">0</span></button>
-<button class="filter" onclick="filterBy('paid',this)">Paid <span id="fPaid">0</span></button>
-<button class="filter" onclick="filterBy('unpaid',this)">Unpaid <span id="fUnpaid">0</span></button>
+<button class="filter active" data-f="all">All <span id="fAll">0</span></button>
+<button class="filter" data-f="paid">Paid <span id="fPaid">0</span></button>
+<button class="filter" data-f="unpaid">Unpaid <span id="fUnpaid">0</span></button>
 </div>
 <div id="list"></div>
 <div class="footer-stats">
-<div class="footer-card">Total Collected: <b id="totalCollected">UGX 0</b><br><small id="totalCollectedSmall">0 of 0 tenants</small></div>
+<div class="footer-card">Total Collected: <b id="totalCollected">UGX 0</b><br><small id="totalCollectedSmall">0 of 0</small></div>
 <div class="footer-card">Total Pending: <b id="totalPending">UGX 0</b><br><small id="totalPendingSmall">0 unpaid</small></div>
 </div>
+<div class="admin-link" onclick="openPaywall()">Manage Subscription / Pay 30k</div>
 </div>
-<div id="form" style="display:none">
+
+<div id="form">
 <div id="formInner">
 <h3>Add Tenant</h3>
 <input id="name" placeholder="Name">
 <input id="room" placeholder="Room No">
 <input id="phone" placeholder="Phone 256...">
 <input id="rent" type="number" placeholder="Rent Amount">
-<button class="btn" onclick="save()">Save</button>
-<button class="btn" style="background:#eee;color:#000" onclick="closeForm()">Cancel</button>
+<button type="button" class="btn" id="saveBtn">Save Tenant</button>
+<button type="button" class="btn" style="background:#eee;color:#000" id="cancelBtn">Cancel</button>
 </div>
 </div>
+
+<div id="paywall">
+<div style="max-width:500px;margin:0 auto">
+<h1>Rentbox Subscription</h1>
+<p>Keep your landlord business running</p>
+<div class="pay-card">
+<h2>UGX 30,000 / Month</h2>
+<p>✓ Unlimited tenants<br>✓ WhatsApp reminders<br>✓ Offline & Backup<br>✓ No limits</p>
+<div class="momo">
+<b>How Landlords Pay:</b><br><br>
+<b>1. MTN Mobile Money:</b><br>Send 30,000 to<br><b style="font-size:20px">0705 634 260</b><br>Name: Rentbox Uganda<br><br>
+<b>2. Airtel Money:</b><br>Send 30,000 to<br><b style="font-size:20px">0705 634 260</b><br><br>
+<b>3. Reference:</b> Your Phone Number
+</div>
+<p>After paying, click below:</p>
+<button class="btn" onclick="confirmPay()">I HAVE PAID 30K - UNLOCK APP</button>
+<button class="btn" style="background:#eee;color:#000" onclick="closePaywall()">Back to App</button>
+<div style="margin-top:20px;font-size:12px;color:#888">
+<p>Admin: After confirming payment, app unlocks for 30 days.</p>
+<p>Contact: http://wa.me/256705634260</p>
+<button onclick="resetSub()" style="background:none;border:0;color:red;font-size:11px">Reset Subscription (Test)</button>
+</div>
+</div>
+</div>
+</div>
+
 <script>
-let tenants = http://JSON.parse(localStorage.getItem('rentbox_final') || '[]');
+const MONTHLY_FEE=30000;
+const FREE_DAYS=7;
+http://document.getElementById('dateNow').innerText=new Date().toLocaleDateString('en-UG',{month:'long',year:'numeric'});
+let start=localStorage.getItem('rentbox_start');
+if(!start){start=Date.now();localStorage.setItem('rentbox_start',start);}
+let daysUsed=Math.floor((Date.now()-Number(start))/86400000);
+let paidUntil=Number(localStorage.getItem('rentbox_paid_until')||0);
+let isSubscribed=paidUntil>Date.now()||daysUsed<FREE_DAYS;
+let tenants=JSON.parse(localStorage.getItem('rentbox_final')||'[]');
 let filter='all';
-function openForm(){document.getElementById('form').style.display='flex';}
-function closeForm(){document.getElementById('form').style.display='none';}
-function save(){
-let n=document.getElementById('name').value;
-let r=document.getElementById('room').value;
-let p=document.getElementById('phone').value;
+
+function openForm(){document.getElementById('form').classList.add('show');}
+function closeForm(){document.getElementById('form').classList.remove('show');}
+function openPaywall(){document.getElementById('paywall').classList.add('show');}
+function closePaywall(){document.getElementById('paywall').classList.remove('show'); checkSub();}
+function confirmPay(){
+let until=Date.now()+30_24_60_60_1000;
+http://localStorage.setItem('rentbox_paid_until',until);
+alert('Payment Confirmed! App unlocked for 30 days. Thank you!');
+closePaywall();
+}
+function resetSub(){localStorage.removeItem('rentbox_paid_until');localStorage.setItem('rentbox_start',Date.now());alert('Reset done');location.reload();}
+function checkSub(){
+let info=document.getElementById('trialInfo');
+let sub=document.getElementById('subStatus');
+paidUntil=Number(localStorage.getItem('rentbox_paid_until')||0);
+daysUsed=Math.floor((Date.now()-Number(localStorage.getItem('rentbox_start')))/86400000);
+if(paidUntil>Date.now()){
+let left=Math.ceil((paidUntil-Date.now())/86400000);
+http://info.innerText='Subscription active - '+left+' days left';
+http://sub.innerText=left+' days left';
+http://document.getElementById('paywall').classList.remove('show');
+}else if(daysUsed<FREE_DAYS){
+http://info.innerText='Free trial: '+(FREE_DAYS-daysUsed)+' days left - Then UGX 30k/mo';
+http://sub.innerText='Free trial '+ (FREE_DAYS-daysUsed)+'d left';
+}else{
+http://info.innerHTML='<b style="color:red">Trial expired - Pay 30k to continue</b>';
+http://sub.innerText='EXPIRED';
+http://document.getElementById('paywall').classList.add('show');
+}
+}
+
+http://document.getElementById('addBtn').addEventListener('click',function(){openForm();});
+http://document.getElementById('cancelBtn').addEventListener('click',function(){closeForm();});
+http://document.getElementById('saveBtn').addEventListener('click',function(){
+let n=document.getElementById('name').value.trim();
+let r=document.getElementById('room').value.trim();
+let p=document.getElementById('phone').value.trim();
 let rent=Number(document.getElementById('rent').value);
 if(!n||!rent){alert('Need name and rent');return;}
 http://tenants.unshift({id:Date.now(),name:n,room:r,phone:p,rent:rent,status:'unpaid',due:'1st of month'});
-http://localStorage.setItem('rentbox_final',JSON.stringify(tenants));closeForm();render();
-http://document.getElementById('name').value='';document.getElementById('rent').value='';document.getElementById('room').value='';document.getElementById('phone').value='';
-}
+http://localStorage.setItem('rentbox_final',JSON.stringify(tenants));
+http://document.getElementById('name').value='';document.getElementById('room').value='';document.getElementById('phone').value='';document.getElementById('rent').value='';
+closeForm();render();
+});
+
+http://document.querySelectorAll('.filter').forEach(btn=>{
+http://btn.addEventListener('click',function(){
+http://document.querySelectorAll('.filter').forEach(b=>b.classList.remove('active'));
+http://this.classList.add('active');
+filter=this.getAttribute('data-f');
+render();
+});
+});
+
 function togglePaid(id){
 let t=tenants.find(x=>x.id==id);t.status=t.status=='paid'?'unpaid':'paid';
 http://localStorage.setItem('rentbox_final',JSON.stringify(tenants));render();
 }
-function filterBy(f,el){
-filter=f;
-http://document.querySelectorAll('.filter').forEach(b=>b.classList.remove('active'));
-http://el.classList.add('active');render();
-}
+
 function render(){
 let list=document.getElementById('list');let html='';
 let totalPaidAll=tenants.filter(t=>t.status=='paid').length;
@@ -108,7 +190,7 @@ let totalCollAll=tenants.filter(t=>t.status=='paid').reduce((a,b)=>a+b.rent,0);
 let totalPendAll=tenants.filter(t=>t.status!='paid').reduce((a,b)=>a+b.rent,0);
 let filtered=tenants.filter(t=>filter=='all'?true:t.status==filter);
 http://filtered.forEach(t=>{
-html+=`<div class="card"><div class="card-top"><b>${t.name}</b><span class="${t.status=='paid'?'paid-badge':'unpaid-badge'}">${t.status.toUpperCase()}</span></div><small>${t.room} · Due ${t.due}</small><div class="row"><input value="PHONE" disabled><input value="${t.phone}" disabled></div><div class="row"><input value="RENT AMOUNT" disabled><input value="UGX ${t.rent.toLocaleString()}" disabled></div><div class="row"><button class="btn-paid" onclick="togglePaid(${t.id})">${t.status=='paid'?'Mark Unpaid':'Mark Paid'}</button><button class="btn-wa" onclick="window.open('https://wa.me/${t.phone}?text=Hi ${t.name}, your rent UGX ${t.rent.toLocaleString()} is pending. - Rentbox')">Remind on WhatsApp</button></div></div>`;
+html+=`<div class="card"><div class="card-top"><b>${t.name}</b><span class="${t.status=='paid'?'paid-badge':'unpaid-badge'}">${t.status.toUpperCase()}</span></div><small>${t.room} · Due ${t.due}</small><div class="row"><input value="${t.phone}" disabled></div><div class="row"><input value="UGX ${t.rent.toLocaleString()}" disabled></div><div class="row"><button class="btn-paid" onclick="togglePaid(${t.id})">${t.status=='paid'?'Mark Unpaid':'Mark Paid'}</button><button class="btn-wa" onclick="window.open('https://wa.me/${t.phone}?text=Hi ${t.name}, your rent UGX ${t.rent.toLocaleString()} is pending. - Rentbox')">WhatsApp</button></div></div>`;
 });
 http://list.innerHTML=html||'<p style="text-align:center;color:#888;padding:20px">No tenants yet. Click + Add Tenant</p>';
 http://document.getElementById('paidCount').innerText=totalPaidAll;
@@ -122,11 +204,12 @@ http://document.getElementById('fPaid').innerText=totalPaidAll;
 http://document.getElementById('fUnpaid').innerText=totalUnpaidAll;
 http://document.getElementById('collectedPct').innerText=Math.round(totalPaidAll/tenants.length_100||0)+'%';
 http://document.getElementById('totalCollected').innerText='UGX '+totalCollAll.toLocaleString();
-http://document.getElementById('totalCollectedSmall').innerText=totalPaidAll+' of '+tenants.length+' tenants';
+http://document.getElementById('totalCollectedSmall').innerText=totalPaidAll+' of '+tenants.length;
 http://document.getElementById('totalPending').innerText='UGX '+totalPendAll.toLocaleString();
 http://document.getElementById('totalPendingSmall').innerText=totalUnpaidAll+' unpaid';
 }
+checkSub();
 render();
 </script>
 </body>
-</html>infringing
+</html>
