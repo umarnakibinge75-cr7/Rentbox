@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rentbox Uganda</title>
+<style>
+_{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
+body{background:#f8fafc;margin:0;padding:0}
+.header{padding:20px 16px 10px 16px}
+.header h1{margin:0;font-size:22px}
+.header p{color:#64748b;margin:4px 0}
+.btn{width:100%;background:#000;color:#fff;padding:16px;border-radius:14px;border:0;font-weight:700;font-size:16px;margin:12px 0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px}
+.stat{background:white;border-radius:16px;padding:14px;box-shadow:0 1px 3px #0001}
+.stat small{color:#64748b}
+.stat b{font-size:20px;display:block;margin:6px 0}
+.stat span{font-size:12px}
+.green{color:#16a34a}
+.red{color:#dc2626}
+.properties{padding:16px}
+.prop-header{display:flex;justify-content:space-between;align-items:center}
+.badge{background:#e0f2fe;color:#0284c7;padding:4px 8px;border-radius:20px;font-size:12px}
+.filters{display:flex;gap:8px;margin:12px 0}
+.filter{padding:8px 16px;border-radius:20px;border:1px solid #e2e8f0;background:white;cursor:pointer}
+.filter.active{background:#000;color:#fff}
+.card{background:white;border-radius:16px;padding:14px;box-shadow:0 2px 8px #0001;margin-bottom:12px}
+.card-top{display:flex;justify-content:space-between}
+.card-top b{font-size:16px}
+.unpaid-badge{background:#fee2e2;color:#dc2626;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.paid-badge{background:#dcfce7;color:#16a34a;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.card small{color:#64748b}
+.card .row{display:flex;gap:8px;margin-top:10px}
+.card input{width:100%;padding:10px;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc}
+.btn-paid{background:#000;color:#fff;flex:1;padding:12px;border-radius:10px;border:0;font-weight:700}
+.btn-wa{background:#25D366;color:#fff;flex:1;padding:12px;border-radius:10px;border:0;font-weight:700}
+.footer-stats{padding:16px;display:grid;gap:10px}
+.footer-card{background:white;padding:14px;border-radius:16px;box-shadow:0 1px 3px #0001}
+#form{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0008;z-index:10;padding:20px;align-items:center;justify-content:center}
+#formInner{background:white;padding:20px;border-radius:16px;width:100%;max-width:400px}
+#formInner input{width:100%;padding:12px;margin:6px 0;border-radius:10px;border:1px solid #ddd}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>RentboxUganda</h1>
+<p>Landlord Rent Tracker · October 2026</p>
+<button class="btn" onclick="openForm()">+ Add Tenant</button>
+</div>
+<div class="stats">
+<div class="stat"><small>Collected This Month <span class="green">● <span id="paidCount">0</span> paid</span></small><b id="collectedTop">UGX 0</b><span id="collectedPct">0%</span></div>
+<div class="stat"><small>Total Pending <span class="red">● <span id="unpaidCount">0</span> unpaid</span></small><b id="pendingTop">UGX 0</b><span>Outstanding rent</span></div>
+<div class="stat"><small>Total Tenants Occupancy</small><b id="totalTop">0 Tenants</b><span>Expected: <span id="expectedTop">UGX 0</span></span></div>
+<div class="stat"><small>My Properties</small><b>Offline Ready</b><span>Local storage</span></div>
+</div>
+<div class="properties">
+<div class="prop-header"><b>My Properties</b><span class="badge">Offline Ready</span></div>
+<div class="filters">
+<button class="filter active" onclick="filterBy('all',this)">All <span id="fAll">0</span></button>
+<button class="filter" onclick="filterBy('paid',this)">Paid <span id="fPaid">0</span></button>
+<button class="filter" onclick="filterBy('unpaid',this)">Unpaid <span id="fUnpaid">0</span></button>
+</div>
+<div id="list"></div>
+<div class="footer-stats">
+<div class="footer-card">Total Collected: <b id="totalCollected">UGX 0</b><br><small id="totalCollectedSmall">0 of 0 tenants</small></div>
+<div class="footer-card">Total Pending: <b id="totalPending">UGX 0</b><br><small id="totalPendingSmall">0 unpaid</small></div>
+</div>
+</div>
+<div id="form" style="display:none">
+<div id="formInner">
+<h3>Add Tenant</h3>
+<input id="name" placeholder="Name">
+<input id="room" placeholder="Room No">
+<input id="phone" placeholder="Phone 256...">
+<input id="rent" type="number" placeholder="Rent Amount">
+<button class="btn" onclick="save()">Save</button>
+<button class="btn" style="background:#eee;color:#000" onclick="closeForm()">Cancel</button>
+</div>
+</div>
+<script>
+let tenants = http://JSON.parse(localStorage.getItem('rentbox_final') || '[]');
+let filter='all';
+function openForm(){document.getElementById('form').style.display='flex';}
+function closeForm(){document.getElementById('form').style.display='none';}
+function save(){
+let n=document.getElementById('name').value;
+let r=document.getElementById('room').value;
+let p=document.getElementById('phone').value;
+let rent=Number(document.getElementById('rent').value);
+if(!n||!rent){alert('Need name and rent');return;}
+http://tenants.unshift({id:Date.now(),name:n,room:r,phone:p,rent:rent,status:'unpaid',due:'1st of month'});
+http://localStorage.setItem('rentbox_final',JSON.stringify(tenants));closeForm();render();
+http://document.getElementById('name').value='';document.getElementById('rent').value='';document.getElementById('room').value='';document.getElementById('phone').value='';
+}
+function togglePaid(id){
+let t=tenants.find(x=>x.id==id);t.status=t.status=='paid'?'unpaid':'paid';
+http://localStorage.setItem('rentbox_final',JSON.stringify(tenants));render();
+}
+function filterBy(f,el){
+filter=f;
+http://document.querySelectorAll('.filter').forEach(b=>b.classList.remove('active'));
+http://el.classList.add('active');render();
+}
+function render(){
+let list=document.getElementById('list');let html='';
+let totalPaidAll=tenants.filter(t=>t.status=='paid').length;
+let totalUnpaidAll=tenants.filter(t=>t.status!='paid').length;
+let totalCollAll=tenants.filter(t=>t.status=='paid').reduce((a,b)=>a+b.rent,0);
+let totalPendAll=tenants.filter(t=>t.status!='paid').reduce((a,b)=>a+b.rent,0);
+let filtered=tenants.filter(t=>filter=='all'?true:t.status==filter);
+http://filtered.forEach(t=>{
+html+=`<div class="card"><div class="card-top"><b>${t.name}</b><span class="${t.status=='paid'?'paid-badge':'unpaid-badge'}">${t.status.toUpperCase()}</span></div><small>${t.room} · Due ${t.due}</small><div class="row"><input value="PHONE" disabled><input value="${t.phone}" disabled></div><div class="row"><input value="RENT AMOUNT" disabled><input value="UGX ${t.rent.toLocaleString()}" disabled></div><div class="row"><button class="btn-paid" onclick="togglePaid(${t.id})">${t.status=='paid'?'Mark Unpaid':'Mark Paid'}</button><button class="btn-wa" onclick="window.open('https://wa.me/${t.phone}?text=Hi ${t.name}, your rent UGX ${t.rent.toLocaleString()} is pending. - Rentbox')">Remind on WhatsApp</button></div></div>`;
+});
+http://list.innerHTML=html||'<p style="text-align:center;color:#888;padding:20px">No tenants yet. Click + Add Tenant</p>';
+http://document.getElementById('paidCount').innerText=totalPaidAll;
+http://document.getElementById('unpaidCount').innerText=totalUnpaidAll;
+http://document.getElementById('collectedTop').innerText='UGX '+totalCollAll.toLocaleString();
+http://document.getElementById('pendingTop').innerText='UGX '+totalPendAll.toLocaleString();
+http://document.getElementById('totalTop').innerText=tenants.length+' Tenants';
+http://document.getElementById('expectedTop').innerText='UGX '+(totalCollAll+totalPendAll).toLocaleString();
+http://document.getElementById('fAll').innerText=tenants.length;
+http://document.getElementById('fPaid').innerText=totalPaidAll;
+http://document.getElementById('fUnpaid').innerText=totalUnpaidAll;
+http://document.getElementById('collectedPct').innerText=Math.round(totalPaidAll/tenants.length_100||0)+'%';
+http://document.getElementById('totalCollected').innerText='UGX '+totalCollAll.toLocaleString();
+http://document.getElementById('totalCollectedSmall').innerText=totalPaidAll+' of '+tenants.length+' tenants';
+http://document.getElementById('totalPending').innerText='UGX '+totalPendAll.toLocaleString();
+http://document.getElementById('totalPendingSmall').innerText=totalUnpaidAll+' unpaid';
+}
+render();
+</script>
+</body>
+</html>infringing
